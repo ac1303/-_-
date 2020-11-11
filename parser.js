@@ -1,152 +1,206 @@
 function scheduleHtmlParser(html) {
-    //除函数名外都可编辑
-    //传入的参数为上一步函数获取到的html
-    //可使用正则匹配
-    //可使用解析dom匹配，工具内置了$，跟jquery使用方法一样，直接用就可以了，参考：https://juejin.im/post/5ea131f76fb9a03c8122d6b9
-    //以下为示例，您可以完全重写或在此基础上更改
-    /*
-    测试账号
-    1801020142
-    测试密码
-    166790
-*/
-console.log(html);
-var json= JSON.parse(html);
-//courseInfos课程信息
- let courseInfos=[];
-//json.list.length获取课程数据长度
-for(let i=0;i<json.list.length;i++){
-//week[]是第几周有排课
-    let week=[];
-//lessonScope，这节课被安排在第几节
-    let lessonScope=[];
-//这门课第几周开始排课，第几周结束排课
-        let week_math=json.list[i].weekScope.match(/\d+/g);
-    let week_start=parseInt(week_math[0]);
-    let week_end=parseInt(week_math[1]);
-//判断单双周
-        switch(json.list[i].schedulingTypeName) {
-            case "仅单周排课":
-             for(let i=week_start;i<week_end+1;i++){
-            if(i%2!= 0){
-              week.push(i);             
-            }
-            };
-            break;
-            case "仅双周排课":
-           for(let i=week_start;i<week_end+1;i++){
-            if(i%2== 0){
-              week.push(i);             
-            }
-            };
-            break;
-            default:
-            for(let i=week_start;i<week_end+1;i++){
-            week.push(i);
-            };    
-    };
-  // 使用正则表达式将上课节数添加进数组
-   let lessonScope_num=json.list[i].lessonScope.match(/\d+/g);
-    for(let i=0;i<lessonScope_num.length;i++){
-           let sections={
-           section:lessonScope_num[i],
-       }
-       lessonScope.push(sections);
-       } 
-//获取星期几，由大写转换为小写
-let day=day_week(json.list[i].week)*1;
-//课程信息填充
-let course = {
-                    name: json.list[i].courseName,
-                    position:json.list[i].classroomPlace,
-                    teacher: json.list[i].teacherNames,
-                    weeks: week,
-                    day:day,
-                    sections:lessonScope,
-                  };
-                  courseInfos.push(course);
-} 
-//--------------------- sectionTimes是作息时间表，作息时间是固定不变的
-let sectionTimes=[
+let courseInfos=[];
+$('#kbgrid_table_0').find('td').each(function() {
+
+  //判断是这节否有课
+      if ($(this).hasClass('td_wrap') && $(this).text().trim() !== '') {
+        //判断是否始终只有一门课在这节上
+        if($(this).children('div').length==2){
+           let week_0=$(this).find("div").eq(0).find("p").eq(1).text();
+           let week_1=$(this).find("div").eq(1).find("p").eq(1).text();
+           if(week_1==week_0){
+             let name_0=$(this).find("div").eq(0).find("p").eq(0).text();
+               let name_1=$(this).find("div").eq(1).find("p").eq(0).text();
+               let name=name_0+"/"+name_1;
+               let position_0=$(this).find("div").eq(0).find("p").eq(2).text();
+               let position_1=$(this).find("div").eq(1).find("p").eq(2).text();              
+               let position=position_0+"/"+position_1;
+               let teacher_0=$(this).find("div").eq(0).find("p").eq(3).text();
+               let teacher_1=$(this).find("div").eq(1).find("p").eq(3).text();
+               let teacher=teacher_0+"/"+teacher_1;
+               let day=$(this).attr('id').split('-')[0];
+                 let course = {};
+               let [weeks, sections] = getTime(week_0);
+                   course.name = name;
+                   course.teacher =teacher;
+                   course.position = position;
+                   course.sections = sections;
+                   course.weeks = weeks;
+                   course.day=day;
+              courseInfos.push(course);  
+           }else{
+             for (let new_i=0;new_i<2;new_i++){
+                     let week=$(this).find("div").eq(new_i).find("p").eq(1).text();
+                     let name=$(this).find("div").eq(new_i).find("p").eq(0).text();
+                     let position=$(this).find("div").eq(new_i).find("p").eq(2).text();
+                     let teacher=$(this).find("div").eq(new_i).find("p").eq(3).text();
+                     let day=$(this).attr('id').split('-')[0];
+                     let course = {};
+               let [weeks, sections] = getTime(week);
+                   course.name = name;
+                   course.teacher =teacher;
+                   course.position = position;
+                   course.sections = sections;
+                   course.weeks = weeks;
+                   course.day=day;
+                   courseInfos.push(course); 
+              }
+           }
+        }else{
+           let week=$(this).find("div").eq(0).find("p").eq(1).text();
+                     let name=$(this).find("div").eq(0).find("p").eq(0).text();
+                     let position=$(this).find("div").eq(0).find("p").eq(2).text();
+                     let teacher=$(this).find("div").eq(0).find("p").eq(3).text();
+                     let day=$(this).attr('id').split('-')[0];
+                     let course = {};
+               let [weeks, sections] = getTime(week);
+                   course.name = name;
+                   course.teacher =teacher;
+                   course.position = position;
+                   course.sections = sections;
+                   course.weeks = weeks;
+                   course.day=day;
+                   courseInfos.push(course); 
+        }      
+      }
+ });
+ console.log(courseInfos);
+ let sectionTimes=[
       {
         "section": 1,
-        "startTime": "08:15",
-        "endTime": "09:00"
+        "startTime": "07:50",
+        "endTime": "08:30"
       },
       {
         "section": 2,
-        "startTime": "09:05",
-        "endTime": "09:50"
+        "startTime": "08:40",
+        "endTime": "09:20"
       },
       {
         "section": 3,
-        "startTime": "10:10",
-        "endTime": "10:55"
+        "startTime": "09:40",
+        "endTime": "10:20"
       },
       {
         "section": 4,
-        "startTime": "11:00",
-        "endTime": "11:45"
+        "startTime": "10:30",
+        "endTime": "11:10"
       },
       {
         "section": 5,
-        "startTime": "14:00",
-        "endTime": "14:45"
+        "startTime": "11:20",
+        "endTime": "12:00"
       },
       {
         "section": 6,
-        "startTime": "14:50",
-        "endTime": "15:35"
+        "startTime": "14:30",
+        "endTime": "15:10"
       },
       {
         "section": 7,
-        "startTime": "15:55",
-        "endTime": "16:40"
+        "startTime": "15:20",
+        "endTime": "16:00"
       },
       {
         "section": 8,
-        "startTime": "16:45",
-        "endTime": "17:30"
+        "startTime": "16:10",
+        "endTime": "16:50"
       },
       {
         "section": 9,
-        "startTime": "19:00",
-        "endTime": "19:45"
+        "startTime": "17:00",
+        "endTime": "17:40"
       },
       {
         "section": 10,
-        "startTime": "19:46",
-        "endTime": "20:30"
+        "startTime": "19:30",
+        "endTime": "20:10"
+      },
+      {
+        "section": 11,
+        "startTime": "20:20",
+        "endTime": "21:00"
+      },
+      {
+        "section": 12,
+        "startTime": "21:10",
+        "endTime": "21:50"
       }
     ];
 
-//将courseInfos和sectionTimes填入
-let result={
+    let result={
     courseInfos:courseInfos,
     sectionTimes:sectionTimes,
 };
 console.log(result);
-return result;     
-
+return result; 
 }
 
-function day_week(aaa){
-switch(aaa) {
-     case "一":
-        return 1;
-     case "二":
-       return 2;
-        case "三":
-       return 3;
-        case "四":
-       return 4;
-        case "五":
-       return 5;
-        case "六":
-       return 6;
-        case "七":
-       return 7;
-     default:
-        return 1;
+
+
+function getTime(str) {
+  let t = str.split('节)')
+  let reg = new RegExp('周', 'g')
+  let weekStr = t[1].replace(reg, '')
+  let weeks = getWeeks(weekStr)
+  return [weeks, getSections(t[0].replace('(', ''))]
+}
+
+function getWeeks(str) {
+  let flag = 0
+  if (str.search('单') != -1) {
+      flag = 1
+      str = str.replace('单', '')
+  } else if (str.search('双') != -1) {
+      flag = 2
+      str = str.replace('双', '')
   }
+  let weeks = weekStr2IntList(str)
+  weeks = weeks.filter((v) => {
+      if (flag === 1) {
+          return v % 2 === 1
+      } else if (flag === 2) {
+          return v % 2 === 0
+      }
+      return v
+  })
+  return weeks
+}
+
+
+function weekStr2IntList(week) {
+  // 将全角逗号替换为半角逗号
+  let reg = new RegExp("，", "g");
+  week.replace(reg, ',');
+  let weeks = [];
+
+  // 以逗号为界分割字符串，遍历分割的字符串
+  week.split(",").forEach(w => {
+      if (w.search('-') != -1) {
+          let range = w.split("-");
+          let start = parseInt(range[0]);
+          let end = parseInt(range[1]);
+          for (let i = start; i <= end; i++) {
+              if (!weeks.includes(i)) {
+                  weeks.push(i);
+              }
+          }
+      } else if (w.length != 0) {
+          let v = parseInt(w);
+          if (!weeks.includes(v)) {
+              weeks.push(v);
+          }
+      }
+  });
+  return weeks;
+}
+
+function getSections(str) {
+  let start = parseInt(str.split('-')[0])
+  let end = parseInt(str.split('-')[1])
+  let sections = []
+  for (let i = start; i <= end; i++) {
+      sections.push({ section: i })
+  }
+  return sections
 }

@@ -1,14 +1,24 @@
 function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom = document) {
     //除函数名外都可编辑
     //以下为示例，您可以完全重写或在此基础上更改
-var json_msg="";
-var xmlHttp = new XMLHttpRequest();
-xmlHttp.onreadystatechange = function() {
-if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-json_msg=xmlHttp.responseText;
-}}
-xmlHttp.open("GET", "/student/courseTimetableDetail/getSemesterTimeTableList?_search=false&nd=1600173733295&pageSize=99&pageNum=1&sidx=&sord=asc",false);        
-xmlHttp.send();
-alert("提示：\n课表问题反馈请+QQ878375551\n无法或不会使用也可以联系我(*^▽^*)\n1、登录后无需操作，直接选择下方一键导入\n2、如果出现无法登录，提示内部错误，清除APP数据就行");
-return json_msg;
+alert("有问题请联系我解决 ，QQ878375551\n(oﾟ▽ﾟ)o\n\n---》登录\n---》选择信息查询\n---》推荐课表打印\n---》预览表格模式的课表\n{点击你需要导入的课表的名称进行预览，预览之后默认是表格模式}\n{也就是当你能看见完整课表时候}\n---》导入");       
+const ifrs = dom.getElementsByTagName("iframe");
+const frs = dom.getElementsByTagName("frame");
+
+if (ifrs.length) {
+    for (let i = 0; i < ifrs.length; i++) {
+        const dom = ifrs[i].contentWindow.document;
+        iframeContent += scheduleHtmlProvider(iframeContent, frameContent, dom);
+        }
+} 
+if (frs.length) {
+    for (let i = 0; i < frs.length; i++) {
+        const dom = frs[i].contentDocument.body.parentElement; 
+        frameContent += scheduleHtmlProvider(iframeContent, frameContent, dom);
+        }
+} 
+if(!ifrs.length && !frs.length){
+    return dom.querySelector('body').outerHTML
+}
+return dom.getElementsByTagName('html')[0].innerHTML + iframeContent+frameContent  
 }
